@@ -1,5 +1,5 @@
 #!/bin/sh
-product=mpgedit_0.7p2
+product=mpgedit_0-75dev2
 install_root=/usr/local
 modinstall="`dirname $0`/.install.sh"
 if [ -f "$modinstall" ]; then
@@ -18,7 +18,7 @@ man1="mpgedit.1 xmpgedit.1 decoder.so.1 mp3decoder.sh.1
 lib="libdecoder_mpg123.so libdecoder_mad.so libdecoder_popen.so libmpglib_mpgedit.so"
 bin="mpgedit mpgedit_nocurses mp3decoder.sh"
 guibin="xmpgedit"
-share="eject.xpm pause.xpm record.xpm next_t.xpm play.xpm stop.xpm 
+share="eject.xpm pause.xpm record.xpm next_t.xpm play.xpm stop.xpm
        record_green.xpm record_red.xpm close.xpm volume1.xpm
        blankdigit_led.xpm eight_led.xpm nine_led.xpm  seven_led.xpm two_led.xpm
        blankpunct_led.xpm five_led.xpm  one_led.xpm   six_led.xpm   zero_led.xpm
@@ -37,7 +37,7 @@ M_FLAG=NO
 do_man_config()
 {
   man_root=$1
- 
+
   if [ $os = "darwin" ]; then
     echo 'Calling makewhatis, this may take some time...'
     echo makewhatis $man_root
@@ -132,18 +132,18 @@ do_gtkrc_config()
 do_install()
 {
   get_install_root
-  
+
   echo "Installing '$product' in '$install_root'"
   install -d $man_base/man1
   install -d $install_root/lib
   install -d $install_root/bin
-  
+
   echo "Installing man pages ($man_base/man1)..."
   install -m 444 $man1 $man_base/man1
-  
+
   echo "Installing shared libraries ($install_root/lib)..."
   install $lib $install_root/lib
-  
+
   echo "Installing executables ($install_root/bin)..."
   install $bin $install_root/bin
 
@@ -173,7 +173,7 @@ do_install()
   if [ -d "gui" ]; then
     cd ..
   fi
-  
+
   rm -f $install_root/lib/libmpgedit_decoder.$shlibext
   ln -s libdecoder_mpg123.$shlibext \
         $install_root/lib/libmpgedit_decoder.$shlibext
@@ -183,11 +183,11 @@ do_install()
     [ -f "libmpgedit_decoder.$shlibext" ] || ln -s $install_root/lib/libmpgedit_decoder.$shlibext .
   )
   fi
-  
+
   if [ -f "/etc/ld.so.conf" ]; then
     line=`grep $install_root/lib /etc/ld.so.conf`
     if [ -z "$line" ]; then
-  
+
       # Short-circuit interactive question if -y provided on command line
       #
       if [ $Y_FLAG = "NO" ]; then
@@ -254,7 +254,7 @@ do_uninstall()
   if [ -d $install_root/share/xmpgedit ]; then
     #
     # These are really symbolic links to the directories if they exist.
-    # Don't use rm -rf on these, because if they really  are 
+    # Don't use rm -rf on these, because if they really  are
     # directories, you may really not mean to delete them.
     #
     [ -L /usr/share/pixmaps/xmpgedit ] && rm -f "/usr/share/pixmaps/xmpgedit"
@@ -318,7 +318,7 @@ do_usage()
        -m: specify the man page install root directory
        -h: display this help
        path: directory to install/uinstall product"
-       
+
 }
 
 

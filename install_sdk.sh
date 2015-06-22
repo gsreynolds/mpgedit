@@ -1,9 +1,9 @@
 #!/bin/sh
-product=mpgedit_sdk_0-73dev
+product=mpgedit_sdk_0-75dev2
 install_root=/usr/local/mpgedit_sdk
 extension_dir="$install_root/py_mpgedit-0.3beta"
 
-include="decoder.h  editif.h  header.h  mp3time.h  mpegindx.h  
+include="decoder.h  editif.h  header.h  mp3time.h  mpegindx.h
          mpegstat.h  playif.h  portability.h  volumeif.h  xing_header.h"
 
 lib="libmpgedit.so libdecoder_mpg123.so libdecoder_mad.so
@@ -76,22 +76,22 @@ do_install()
   install -d $install_root/include/mpgedit_sdk
   install -d $install_root/lib
   install -d $install_root/examples
-  
+
   echo "Installing shared libraries ($install_root/lib)..."
   install $lib $install_root/lib
-  
+
   echo "Installing header files ($install_root/include/mpgedit_sdk)..."
   install $include $install_root/include/mpgedit_sdk
-  
+
   echo "Installing example files ($install_root/examples)..."
 
   [ ! -d "$contribdir" ] && install $examples $install_root/examples
   [ -d "$contribdir" ]   && install $examples_contrib $install_root/examples
-  
+
   rm -f $install_root/lib/libmpgedit_decoder.so
   ln -s $install_root/lib/libdecoder_mpg123.so \
         $install_root/lib/libmpgedit_decoder.so
-  
+
   line=`grep $install_root/lib /etc/ld.so.conf`
   if [ -z "$line" ]; then
     echo
@@ -183,8 +183,7 @@ get_install_root()
 #
 # ============================ main =======================
 #
-uid=`id | sed -e 's/uid=\([0-9][0-9]*\).*/\1/'`
-if [ $uid != 0 ]; then
+if [ `id -u` -ne 0 ]; then
   echo "ERROR: Can only install '$product' as root"
   exit 1;
 fi
