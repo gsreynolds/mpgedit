@@ -19,6 +19,9 @@ examples_contrib="$contribdir/test_pympgedit.py \
 py_mpgedit="pympgedit.py"
 py_mpgedit_contrib="$contribdir/pympgedit.py"
 
+Y_FLAG=NO
+U_FLAG=NO
+
 python_uninstall()
 {
   python_packages=`python -c 'import sys; j = [ i for i in sys.path if i.endswith("site-packages")]; print j[0]'`
@@ -92,19 +95,32 @@ do_install()
   ln -s $install_root/lib/libdecoder_mpg123.so \
         $install_root/lib/libmpgedit_decoder.so
 
-  line=`grep $install_root/lib /etc/ld.so.conf`
-  if [ -z "$line" ]; then
-    echo
-    echo "$install_root/lib not found in /etc/ld.so.conf"
-    echo "This is needed for proper operation of mpgedit"
-    echo
-    echo -n "  Do you want to add this now? [Y/n] "
-    read line
-    line=`echo $line | tr '[A-Z]' '[a-z]'`
-    if [ "$line" != "n" -a "$line" != "no" ]; then
-      echo "$install_root/lib" >> /etc/ld.so.conf
-      /sbin/ldconfig
+  if [ -f "/etc/ld.so.conf" ]; then
+    line=`grep $install_root/lib /etc/ld.so.conf`
+    if [ -z "$line" ]; then
+
+      # Short-circuit interactive question if -y provided on command line
+      #
+      if [ $Y_FLAG = "NO" ]; then
+        echo
+        echo "$install_root/lib not found in /etc/ld.so.conf"
+        echo "This is needed for proper operation of mpgedit"
+        echo
+        echo -n "  Do you want to add this now? [Y/n] "
+        read line
+        line=`echo $line | tr '[A-Z]' '[a-z]'`
+      else
+        line=$Y_FLAG
+      fi
+      if [ "$line" != "n" -a "$line" != "no" ]; then
+        echo "updating /etc/ld.so.conf..."
+        echo "$install_root/lib" >> /etc/ld.so.conf
+      fi
     fi
+     # Always run ldconfig, even if install path was previously in ld.so.conf,
+     # because this install may have added new libraries not previously in
+     # the library cache.
+    /sbin/ldconfig
   fi
 
   echo "Finished installing '$product'"
@@ -159,24 +175,26 @@ get_install_root()
 {
   prefix=$1
   echo "Current ${prefix}install location is '$install_root'"
-  echo -n "  Change location? [y/N] "
-  read line
-  line=`echo $line | tr '[A-Z]' '[a-z]'`
-  if [ "$line" = "y" -o "$line" = "yes" ]; then
-    ok=no
-    echo
-    while [ "$ok" = "no" ]; do
-      echo "Enter ${prefix}install directory"
-      read new_install_root
-      echo "New ${prefix}install directory: '$new_install_root'"
-      echo -n "  Is this correct? "
-      read line
-      line=`echo $line | tr '[A-Z]' '[a-z]'`
-      if [ "$line" = "y" -o "$line" = "yes" ]; then
-        ok="yes"
-      fi
-    done
-    install_root=$new_install_root
+  if [ $Y_FLAG = "NO" ]; then
+    echo -n "  Change location? [y/N] "
+    read line
+    line=`echo $line | tr '[A-Z]' '[a-z]'`
+    if [ "$line" = "y" -o "$line" = "yes" ]; then
+      ok=no
+      echo
+      while [ "$ok" = "no" ]; do
+        echo "Enter ${prefix}install directory"
+        read new_install_root
+        echo "New ${prefix}install directory: '$new_install_root'"
+        echo -n "  Is this correct? "
+        read line
+        line=`echo $line | tr '[A-Z]' '[a-z]'`
+        if [ "$line" = "y" -o "$line" = "yes" ]; then
+          ok="yes"
+        fi
+      done
+      install_root=$new_install_root
+    fi
   fi
 }
 
@@ -189,16 +207,23 @@ if [ `id -u` -ne 0 ]; then
 fi
 umask 0
 
-if [ -z "$1" ]; then
-  do_install
-  exit 0
-elif [ -n "$1" ]; then
+while [ `echo "x$1" | grep -c 'x-'` = "1" ]; do
   t=`echo "x$1" | grep '^x-u$'`
-  if [ -n "$t" ]; then
-    do_uninstall
+  if [ "x$1" = "x-u" ]; then
+    U_FLAG=YES
     un="un"
-    exit 0
+  elif [ "x$1" = "x-y" ]; then
+    Y_FLAG=YES
   else
     echo "unrecognized option '$1'"
+    exit 1
   fi
+  shift
+done
+
+if [ $U_FLAG = "YES" ]; then
+  do_uninstall
+else
+  do_install
+  exit 0
 fi
